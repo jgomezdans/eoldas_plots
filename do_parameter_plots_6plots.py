@@ -10,7 +10,7 @@ def PreparePlotsParams ():
     inches_per_pt = 1.0/72.27               # Convert pt to inches
     golden_mean = (np.sqrt(5)-1.0)/2.0         # Aesthetic ratio
     fig_width = fig_width_pt*inches_per_pt  # width in inches
-    figh_width = 7.48
+    figh_width = 8.3#10./2.54
     fig_height =fig_width*golden_mean       # height in inches
     #fig_size = [fig_height, fig_width]
     fig_size = [fig_width, fig_height]
@@ -223,4 +223,9 @@ for param in xrange ( 6 ):
 #plt.show()
 #plt.savefig ("%s.png"%fout_fname, dpi=1200)
 #plt.savefig ("%s.pdf"%fout_fname, dpi=1200)
-plt.show()
+fig1.savefig ( "single_%s.png" % fout_fname, dpi=600 )
+fig1.savefig ( "single_%s.pdf" % fout_fname, dpi=600 )
+fig2.savefig ( "o1_%s.png" % fout_fname, dpi=600 )
+fig2.savefig ( "o1_%s.pdf" % fout_fname, dpi=600 )
+fig3.savefig ( "o2_%s.png" % fout_fname, dpi=600 )
+fig3.savefig ( "o2_%s.pdf" % fout_fname, dpi=600 )
