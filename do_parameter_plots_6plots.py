@@ -12,8 +12,8 @@ def PreparePlotsParams ():
     fig_width = fig_width_pt*inches_per_pt  # width in inches
     figh_width = 7.48
     fig_height =fig_width*golden_mean       # height in inches
-    fig_size = [fig_height, fig_width]
-    #fig_size = [fig_width, fig_height]
+    #fig_size = [fig_height, fig_width]
+    fig_size = [fig_width, fig_height]
 
     plt.rcParams['axes.formatter.limits'] = [-3, 3]
 		 #No large numbers with loads of 0s 
@@ -28,8 +28,8 @@ def PreparePlotsParams ():
     plt.rcParams['figure.subplot.right'] = .96
     plt.rcParams['figure.subplot.top'] = 0.94
     plt.rcParams['figure.subplot.bottom'] = 0.08
-    plt.rcParams['figure.subplot.hspace'] = 0.07
-    plt.rcParams['figure.subplot.wspace'] = 0.06
+    plt.rcParams['figure.subplot.hspace'] = 0.12
+    plt.rcParams['figure.subplot.wspace'] = 0.14
     plt.rcParams['figure.figsize']=fig_size
     
     
@@ -83,9 +83,14 @@ tbounds = [[0.01, 6.  ], [0,200],[1.00025008e-05, 0.03],[1e-5,0.02],[0.8,2.0],[0
 tbounds = [[0, 6.],[0,200],[0,0.04],[0,0.03],[0.8,2.5],[ 0.0,0.5]]
 iloc = [ 2, 5, 7,8,9, 10]
 truth = np.loadtxt( "./truth.400.dat", skiprows=1 )
+fig1 = plt.figure()
+fig2 = plt.figure()
+fig3 = plt.figure()
 for param in xrange ( 6 ):
-    iparam = param*3
-    plt.subplot ( 6, 3, iparam+1 )
+    
+    
+    plt.figure(1)
+    fig1.add_subplot ( 2, 3, param+1 )
     y1 = single_inv[:,iloc[param]-1] - 1.96*single_inv[:,13+iloc[param]-1]
     y2 = single_inv[:,iloc[param]-1] + 1.96*single_inv[:,13+iloc[param]-1]
     y1 = np.clip ( y1, bounds[param][0], bounds[param][1] )
@@ -96,34 +101,27 @@ for param in xrange ( 6 ):
     
 
     plt.vlines( single_inv[:,0], transform_var( y1, param+1 ), \
-        transform_var( y2, param+1 ), lw=0.4)
-    plt.plot ( single_inv[:,0], mu, 'sk-', lw=.5,ms=4,mfc='none' )
-    plt.plot ( truth[:, 0], transform_var (truth[:, iloc[param]+1], param+1 ), '--k' )
+        transform_var( y2, param+1 ), lw=0.4, color="r")
+    plt.plot ( single_inv[:,0], mu, 'sr-', lw=.5,ms=4 )
+    plt.plot ( truth[:, 0], transform_var (truth[:, iloc[param]+1], param+1 ), '--g', lw=1.2 )
     axo = plt.axis()
-    #if param==0:
-        #axes = [axo[0], axo[1], 0, 6]
-    #elif param==1:
-        #axes = [axo[0], axo[1],0, 140]
-    #elif param==2:
-        #axes = [axo[0], axo[1],0, .10]
-    #elif param==3:
     axes = [axo[0], axo[1], tbounds[param][0], tbounds[param][1]]
     plt.axis ( axes )        
-    plt.grid ( True )
+
     ax = plt.gca()
-    if param == 0:
-        plt.title ("Single Obs \nInversion")
-    if param == 5:
-       plt.plot ( xval_obs, 0.02+np.ones_like ( xval_obs)*tbounds[param][0], '+k', ms=3)
-       plt.xlabel(r'Day of year')
-       xtl = ax.get_xticklabels()
-       [ label.set_visible(False) \
+    
+    vshift = 0.02 * (tbounds[param][1] - tbounds[param][0])
+    plt.plot ( xval_obs, vshift+np.ones_like ( xval_obs)*tbounds[param][0], '+k', ms=3)
+    if param+1 > 3:
+        plt.xlabel(r'Day of year')
+        xtl = ax.get_xticklabels()
+        [ label.set_visible(False) \
            for (ipos, label) in enumerate(xtl) if ipos%2==0 ]
     else:
         #No xlabels here!
         xtl = ax.get_xticklabels()
         [ label.set_visible(False) for label in xtl ]        
-    plt.ylabel( param_names[param] )
+    plt.title( param_names[param] )
     yticks = ax.get_yticks()
     ax.set_yticks ( np.linspace ( 1.1*tbounds[param][0], 0.9*tbounds[param][1],3) )
     locs, labels = plt.yticks()
@@ -131,7 +129,13 @@ for param in xrange ( 6 ):
 	    plt.yticks ( locs, map(lambda x: "%5.3g" %x, locs))
     else:
 	    plt.yticks ( locs, map(lambda x: "%5.2g" % x, locs))
-    plt.subplot ( 6, 3, iparam+2 )
+	    
+#############################################################################  
+    vshift = 0.02 * (tbounds[param][1] - tbounds[param][0])
+    plt.figure(2)
+    fig2.add_subplot ( 2, 3, param + 1)
+    
+    
     y1 = o1_inv[:,iloc[param]+1] - 1.96*o1_inv[:,15+iloc[param]]
     y2 = o1_inv[:,iloc[param]+1]+ 1.96*o1_inv[:,15+iloc[param]]
     y1 = np.clip ( y1, bounds[param][0], bounds[param][1] )
@@ -142,38 +146,41 @@ for param in xrange ( 6 ):
     plt.fill_between( np.arange(365) + 1, transform_var( y1, param+1 ), \
         y2=transform_var( y2, param+1 ), facecolor='0.8', lw=0.2 )
     
-    plt.plot ( np.arange(365) + 1, mu, 'k-', lw=1.5 )
+    plt.plot ( np.arange(365) + 1, mu, 'r-', lw=1.5 )
     actual_obs_mask = np.in1d ( o1_inv[:,0], single_inv[:,0] )
-    plt.plot ( o1_inv[actual_obs_mask,0], mu[actual_obs_mask], 'ok', \
-            ms=4,mfc='none' )
+    plt.plot ( o1_inv[actual_obs_mask,0], mu[actual_obs_mask], 'or', \
+            ms=4 )
     
-    plt.plot ( truth[:, 0], transform_var (truth[:, iloc[param]+1], param+1 ), '--k' )
+    plt.plot ( truth[:, 0], transform_var (truth[:, iloc[param]+1], param+1 ), '--g', lw=1.2 )
     plt.axis ( axes )
-    plt.grid ( True )
     ax = plt.gca()
-    if param == 0:
-        plt.title (r'1\textsuperscript{st} order \\constraint$\;\gamma=%d$'%gamma_o1)
-    if param == 5:
-       plt.plot ( xval_obs, 0.02+np.ones_like ( xval_obs)*tbounds[param][0], '+k', ms=3)
-       plt.xlabel(r'Day of year')
-       xtl = ax.get_xticklabels()
-       [ label.set_visible(False) \
+    plt.title( param_names[param] )
+    
+    plt.plot ( xval_obs, vshift+np.ones_like ( xval_obs)*tbounds[param][0], '+k', ms=3)
+    if param + 1 > 3:
+        plt.xlabel(r'Day of year')
+        xtl = ax.get_xticklabels()
+        [ label.set_visible(False) \
            for (ipos, label) in enumerate(xtl) if ipos%2==0 ]
     else:
         #No xlabels here!
         xtl = ax.get_xticklabels()
         [ label.set_visible(False) for label in xtl ]        
-    ytl = ax.get_yticklabels()
-    [ label.set_visible(False) for label in ytl ]
     # Get y ticks and unset the top one to avoid overcrowding
     yticks = ax.get_yticks()
-
     ax.set_yticks ( np.linspace ( 1.1*tbounds[param][0], 0.9*tbounds[param][1],3) )
+    locs, labels = plt.yticks()
+    if locs[-1] == 180:
+        plt.yticks ( locs, map(lambda x: "%5.3g" %x, locs))
+    else:
+        plt.yticks ( locs, map(lambda x: "%5.2g" % x, locs))
 
     #ax.set_yticks ( yticks[:-1] )
-
-
-    plt.subplot ( 6, 3, iparam+3 )
+ #############################################################################  
+    vshift = 0.02 * (tbounds[param][1] - tbounds[param][0])
+    plt.figure(3)
+    fig3.add_subplot ( 2, 3, param + 1)
+    
     y1 = o2_inv[:,iloc[param]+1] - 1.96*o2_inv[:,15+iloc[param]]
     y2 = o2_inv[:,iloc[param]+1] + 1.96*o2_inv[:,15+iloc[param]]
     y1 = np.clip ( y1, bounds[param][0], bounds[param][1] )
@@ -183,20 +190,18 @@ for param in xrange ( 6 ):
     mu = transform_var (o2_inv[:,iloc[param]+1], param+1)
     plt.fill_between( np.arange(365) + 1, transform_var( y1, param+1 ), \
         y2=transform_var( y2, param+1 ), facecolor='0.8',lw=0.2 )
-    plt.plot ( np.arange(365) + 1, mu, 'k-', lw=1.5 )
+    plt.plot ( np.arange(365) + 1, mu, 'r-', lw=1.5 )
     actual_obs_mask = np.in1d ( o2_inv[:,0], single_inv[:,0] )
-    plt.plot ( o2_inv[actual_obs_mask,0], mu[actual_obs_mask], 'ok', \
+    plt.plot ( o2_inv[actual_obs_mask,0], mu[actual_obs_mask], 'or', \
             ms=4,mfc='none' )
     
-    plt.plot ( truth[:, 0], transform_var (truth[:, iloc[param]+1], param+1 ), '--k' )
+    plt.plot ( truth[:, 0], transform_var (truth[:, iloc[param]+1], param+1 ), '--g', lw=1.2 )
     plt.axis ( axes )
-    plt.grid ( True )
-    ax = plt.gca()
-    if param == 0:
-        plt.title (r'2\textsuperscript{nd} order \\constraint $\;\gamma=%d$'%gamma_o2)
     
-    if param == 5:
-       plt.plot ( xval_obs, 0.02 + np.ones_like ( xval_obs)*tbounds[param][0], '+k', ms=3)
+    ax = plt.gca()
+    plt.title( param_names[param] )
+    plt.plot ( xval_obs, vshift + np.ones_like ( xval_obs)*tbounds[param][0], '+k', ms=3)
+    if param + 1 > 3:
        plt.xlabel(r'Day of year')
        xtl = ax.get_xticklabels()
        [ label.set_visible(False) \
@@ -205,15 +210,17 @@ for param in xrange ( 6 ):
         #No xlabels here!
         xtl = ax.get_xticklabels()
         [ label.set_visible(False) for label in xtl ]
-    ytl = ax.get_yticklabels()
-    [ label.set_visible(False) for label in ytl ]
     # Get y ticks and unset the top one to avoid overcrowding
     yticks = ax.get_yticks()
-    #ax.set_yticks ( yticks[:-1] )
     ax.set_yticks ( np.linspace ( 1.1*tbounds[param][0], 0.9*tbounds[param][1],3) )
-
+    locs, labels = plt.yticks()
+    if locs[-1] == 180:
+        plt.yticks ( locs, map(lambda x: "%5.3g" %x, locs))
+    else:
+        plt.yticks ( locs, map(lambda x: "%5.2g" % x, locs))
     #plt.savefig ("rse_expt1.pdf")
     #plt.savefig ("rse_expt1.png", dpi=600)
 #plt.show()
 #plt.savefig ("%s.png"%fout_fname, dpi=1200)
-plt.savefig ("%s.pdf"%fout_fname, dpi=1200)
+#plt.savefig ("%s.pdf"%fout_fname, dpi=1200)
+plt.show()
